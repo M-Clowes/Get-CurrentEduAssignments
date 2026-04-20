@@ -1,0 +1,7 @@
+{
+    "TenantId": "00000000-0000-0000-0000-000000000000",
+    "AppId": "00000000-0000-0000-0000-000000000000",
+    "ClientSecret": "REPLACE_ME",
+    "DefaultDomain": "example.onmicrosoft.com",
+    "OutputFolder": "C:\\Temp"
+}
