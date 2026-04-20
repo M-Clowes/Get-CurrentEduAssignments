@@ -2,13 +2,13 @@ $config = Get-Content ".\ScriptValues.json" -Raw | ConvertFrom-Json
 $secret_id = ConvertTo-SecureString $config.ClientSecret -AsPlainText -Force
 $credential = [pscredential]::new($config.AppId, $secret_id)
 
-$mgParams = @{
+$mg_params = @{
     TenantId = $config.TenantId
     ClientSecretCredential = $credential
     NoWelcome = $true
 }
 
-Connect-MgGraph @mgParams
+Connect-MgGraph @mg_params
 
 $classes = Get-MgEducationClass -All
 
@@ -31,13 +31,13 @@ if (Test-Path $config.OutputFolder) {
     Export-Csv -Path "$($config.OutputFolder)\$curr_time-assignments.csv" -NoTypeInformation
 }
 else {
-    $errPath = Join-Path $env:TEMP "Get-CurrentEduAssignments"
-    if (-not (Test-Path $errPath)) {
-        New-Item -ItemType Directory -Force | Out-Null
+    $err_path = Join-Path $env:TEMP "Get-CurrentEduAssignments"
+    if (-not (Test-Path $err_path)) {
+        New-Item -Path $err_path -ItemType Directory -Force | Out-Null
     }
-    $errLog = Join-Path $errPath "$curr_time-Errors.txt"
-    if (-not (Test-Path $errLog)) {
-        New-Item -Path $errLog -ItemType File -Force | Out-Null
+    $errLog = Join-Path $err_path "$curr_time-Errors.txt"
+    if (-not (Test-Path $err_path)) {
+        New-Item -Path $err_log -ItemType File -Force | Out-Null
     }
-    "[$(Get-Date -Format "yyyy.MM.dd HH:mm:ss")] Couldn't reach Ouput Folder." | Add-Content -Path $errLog
+    "[$(Get-Date -Format "yyyy.MM.dd HH:mm:ss")] Couldn't reach Output Folder." | Add-Content -Path $err_log
 }

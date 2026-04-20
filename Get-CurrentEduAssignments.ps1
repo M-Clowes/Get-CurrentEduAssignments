@@ -2,13 +2,13 @@ $config = Get-Content ".\ScriptValues.json" -Raw | ConvertFrom-Json
 $secret_id = ConvertTo-SecureString $config.ClientSecret -AsPlainText -Force
 $credential = [pscredential]::new($config.AppId, $secret_id)
 
-$mgParams = @{
+$mg_params = @{
     TenantId = $config.TenantId
     ClientSecretCredential = $credential
     NoWelcome = $true
 }
 
-Connect-MgGraph @mgParams
+Connect-MgGraph @mg_params
 
 :fltr while ($true) {
     Write-Host "Do you want to filter by student? (Y/N)" -ForegroundColor Cyan
@@ -64,7 +64,7 @@ $curr_time = Get-Date -Format yyyy.MM.dd
     $resp = (Read-Host).Trim()
     switch -Regex ($resp) {
         "^(?i)y(es)?$" {
-            Write-Host "Where are you going to save this?" -ForegroundColor Cyan
+            Write-Host "Output location: " -ForegroundColor Cyan
             $path = (Read-Host).Trim()
             $due_assignments | Export-Csv -Path "$path\$curr_time-assignments.csv" -NoTypeInformation
             Write-Host "CSV exported to $path\$curr_time-assignments.csv" -ForegroundColor DarkGreen
