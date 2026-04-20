@@ -1,0 +1,11 @@
+# --- Values ---
+scriptValues.json
+
+# --- Script output ---
+*.csv
+*-Errors.txt
+
+# --- Editor / OS ---
+.vscode/
+.DS_Store
+Thumbs.db
