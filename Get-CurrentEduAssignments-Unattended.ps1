@@ -35,7 +35,7 @@ else {
     if (-not (Test-Path $err_path)) {
         New-Item -Path $err_path -ItemType Directory -Force | Out-Null
     }
-    $errLog = Join-Path $err_path "$curr_time-Errors.txt"
+    $err_log = Join-Path $err_path "$curr_time-Errors.txt"
     if (-not (Test-Path $err_path)) {
         New-Item -Path $err_log -ItemType File -Force | Out-Null
     }
