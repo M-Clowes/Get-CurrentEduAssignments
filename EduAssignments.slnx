@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/EduAssignments.CLI/EduAssignments.CLI.csproj" />
+    <Project Path="src/EduAssignments.Core/EduAssignments.Core.csproj" />
+    <Project Path="src/EduAssignments.GUI/EduAssignments.GUI.csproj" />
+    <Project Path="src/EduAssignments.Services/EduAssignments.Services.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,22 @@
+# .NET Core / C#
+bin/
+obj/
+*.exe
+*.dll
+*.pdb
+*.user
+
+# Secrets and Config
+**/*app_config.json
+
+# IDE - Visual Studio / VS Code
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# OS generated files
+.DS_Store
+Thumbs.db

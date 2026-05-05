@@ -1,0 +1,8 @@
+{
+  "AppConfig": {
+    "TenantId": "your-tenant-id-here",
+    "AppId": "your-app-id-here",
+    "ClientSecret": "your-secret-here",
+    "DefaultDomain": "yourdomain.com"
+  }
+}
