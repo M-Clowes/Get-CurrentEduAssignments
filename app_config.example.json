@@ -3,6 +3,7 @@
     "TenantId": "your-tenant-id-here",
     "AppId": "your-app-id-here",
     "ClientSecret": "your-secret-here",
-    "DefaultDomain": "yourdomain.com"
+    "DefaultDomain": "yourdomain.com",
+    "OutputLocation": "C:\\TEMP"
   }
 }

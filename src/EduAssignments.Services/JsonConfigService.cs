@@ -15,7 +15,10 @@ public class JsonConfigService : IConfigService
             .AddJsonFile(filePath, optional: false, reloadOnChange: true);
         IConfiguration config = builder.Build();
 
-        _config = config.Get<AppConfig>() ?? throw new InvalidOperationException("Could not load configuration.");
+        _config = config
+            .GetSection("AppConfig")
+            .Get<AppConfig>()
+            ?? throw new InvalidOperationException("Could not load configuration.");
     }
 
     public AppConfig GetConfig() => _config;

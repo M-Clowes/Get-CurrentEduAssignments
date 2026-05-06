@@ -6,4 +6,5 @@ public class AppConfig
     public string AppId { get; set; } = string.Empty;
     public string ClientSecret { get; set; } = string.Empty;
     public string DefaultDomain { get; set; } = string.Empty;
+    public string OutputFolder { get; set; } = string.Empty;
 }

@@ -5,6 +5,7 @@ using EduAssignments.Services;
 
 string? upnArg = null;
 string? csvArg = null;
+bool automate = false;
 
 for (int i = 0; i < args.Length; ++i)
 {
@@ -12,6 +13,8 @@ for (int i = 0; i < args.Length; ++i)
         upnArg = args[i + 1];
     if (args[i] == "--csv" && (i + 1 < args.Length))
         csvArg = args[i + 1];
+    if ((args[i] == "--auto") && (i + 1 < args.Length))
+        automate = true;
 }
 
 var services = new ServiceCollection();
@@ -35,7 +38,8 @@ var exportService = serviceProvider.GetRequiredService<IExportService>();
 var config = serviceProvider.GetRequiredService<IConfigService>().GetConfig(); 
 
 string? upn = upnArg;
-if (string.IsNullOrWhiteSpace(upn) && Prompt.GetYesNo("Do you want to filter by student?"))
+
+if (!automate && string.IsNullOrWhiteSpace(upn) && Prompt.GetYesNo("Do you want to filter by student?"))
 {
     string inputUpn = Prompt.GetRequiredString("Student UPN");
     upn = userService.FormatUserPrincipalName(inputUpn, config.DefaultDomain);
@@ -45,38 +49,45 @@ else if (!string.IsNullOrWhiteSpace(upn))
     upn = userService.FormatUserPrincipalName(upn, config.DefaultDomain);
 }
 
-Console.WriteLine("Fetching assignments...");
+using var cts = new CancellationTokenSource();
+var spinner = Task.Run(() => Graphics.Spinner(cts.Token));
+
 var assignments = await graphService.GetAssignmentsAsync(upn);
 
-Console.ForegroundColor = ConsoleColor.DarkGreen;
-Console.WriteLine("Complete.");
-Console.ResetColor();
+cts.Cancel();
+await spinner;
 
-foreach (var a in assignments)
-{
-    Console.WriteLine($"[{a.Status}] {a.ClassName} - {a.DisplayName} (Due: {a.DueDateTime})");
-}
+Console.WriteLine($"Fetched {assignments.Count()} active assignments");
 
+string path = string.Empty;
 if (!string.IsNullOrWhiteSpace(csvArg))
 {
-    if (!Directory.Exists(csvArg))
-        Directory.CreateDirectory(csvArg);
-    var fileName = $"{DateTime.Now:yyyy.MM.dd}-assignments.csv";
-    var fullPath = Path.Combine(csvArg, fileName);
-
-    exportService.ExportToCsv(assignments, fullPath);
+    path = csvArg;
+}
+else if (automate)
+{
+    if (string.IsNullOrWhiteSpace(config.OutputFolder))
+        throw new InvalidOperationException("Automation mode required app_config.json OutputFolder to be configured. Or --csv to be used");
+    path = config.OutputFolder;
 }
 else if (Prompt.GetYesNo("Would you like this as a CSV?"))
 {
-    var path = Prompt.GetRequiredString("Enter output directory path");
-    if (!Directory.Exists(path))
-        Directory.CreateDirectory(path);
-    var fileName = $"{DateTime.Now:yyyy.MM.dd}-assignments.csv";
-    var fullPath = Path.Combine(path, fileName);
-
-    exportService.ExportToCsv(assignments, fullPath);
-
-    Console.ForegroundColor = ConsoleColor.DarkGreen;
-    Console.WriteLine($"CSV exported to {fullPath}");
-    Console.ResetColor();
+    path = Prompt.GetRequiredString("Enter output directory path");
 }
+else
+{
+    Graphics.PrintAssignmentsTable(assignments);
+    return;
+}
+
+if (!Directory.Exists(path))
+    Directory.CreateDirectory(path);
+
+var fileName = $"{DateTime.Now:yyyy.MM.dd}-assignments.csv";
+var fullPath = Path.Combine(path, fileName);
+
+exportService.ExportToCsv(assignments, fullPath);
+
+Console.ForegroundColor = ConsoleColor.DarkGreen;
+Console.WriteLine($"CSV exported to {fullPath}");
+Console.ResetColor();

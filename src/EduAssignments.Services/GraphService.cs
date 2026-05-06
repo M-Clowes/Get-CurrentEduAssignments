@@ -2,7 +2,7 @@
 using Azure.Identity;
 using EduAssignments.Core.Interfaces;
 using EduAssignments.Core.Models;
-
+using Microsoft.Graph.Models;
 namespace EduAssignments.Services;
 
 public class GraphService : IGraphService
@@ -20,33 +20,66 @@ public class GraphService : IGraphService
     public async Task<IEnumerable<AssignmentItem>> GetAssignmentsAsync(string? userUpn = null)
     {
         var assignmentList = new List<AssignmentItem>();
+        var classes = new List<EducationClass>();
 
-        var classes = userUpn != null
+        var classScope = userUpn != null
             ? await _graphClient.Education.Users[userUpn].Classes.GetAsync()
             : await _graphClient.Education.Classes.GetAsync();
-        if (classes?.Value == null)
+        if (classScope?.Value == null)
             return assignmentList;
-        foreach (var eduClass in classes.Value)
-        {
-            var assignments = await _graphClient.Education.Classes[eduClass.Id].Assignments.GetAsync();
 
-            if (assignments?.Value != null)
-            {
-                foreach (var assignment in assignments.Value)
+        var classIterator = PageIterator<EducationClass, EducationClassCollectionResponse>
+            .CreatePageIterator(
+                _graphClient,
+                classScope,
+                eduClass =>
                 {
-                    assignmentList.Add(new AssignmentItem
-                    {
-                        ClassId = eduClass.Id ?? string.Empty,
-                        ClassName = eduClass.DisplayName ?? string.Empty,
-                        AssignmentId = assignment.Id ?? string.Empty,
-                        DisplayName = assignment.DisplayName ?? string.Empty,
-                        Status = assignment.Status?.ToString() ?? string.Empty,
-                        DueDateTime = assignment.DueDateTime
-
-                    });
+                    classes.Add(eduClass);
+                    return true;
                 }
-            }
-        }
+            );
+        await classIterator.IterateAsync();
+
+        var tasks = classes.Select(cls => PopulatePerClassAssignmentsAsync(cls, assignmentList));
+        await Task.WhenAll(tasks);
+
         return assignmentList;
+    }
+
+    private async Task PopulatePerClassAssignmentsAsync(EducationClass eduClass, List<AssignmentItem> assignmentList)
+    {
+        var assignmentsResponse = await _graphClient
+            .Education
+            .Classes[eduClass.Id]
+            .Assignments
+            .GetAsync();
+
+        if (assignmentsResponse?.Value == null)
+            return;
+
+        var assignmentIterator = PageIterator<EducationAssignment, EducationAssignmentCollectionResponse>
+            .CreatePageIterator(
+                _graphClient,
+                assignmentsResponse,
+                assignment =>
+                {
+                    if (assignment.DueDateTime != null &&
+                        assignment.DueDateTime >= DateTimeOffset.UtcNow)
+                    {
+                        assignmentList.Add(new AssignmentItem
+                        {
+                            ClassId = eduClass.Id ?? string.Empty,
+                            ClassName = eduClass.DisplayName ?? string.Empty,
+                            AssignmentId = assignment.Id ?? string.Empty,
+                            DisplayName = assignment.DisplayName ?? string.Empty,
+                            Status = assignment.Status?.ToString() ?? string.Empty,
+                            DueDateTime = assignment.DueDateTime
+                        });
+                    }
+
+                    return true;
+                }
+            );
+        await assignmentIterator.IterateAsync();
     }
 }
