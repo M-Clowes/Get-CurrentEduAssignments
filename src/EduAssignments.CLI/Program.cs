@@ -9,7 +9,20 @@ bool automate = false;
 
 for (int i = 0; i < args.Length; ++i)
 {
-    if (args[i] == "--upn" && (i + 1 < args.Length))
+    if (args[i] == "--help")
+    {
+        Console.WriteLine(
+            "EduAssignments.CLI [options]\n\n" +
+            "Options:\n" +
+            "--auto\t\tRun in non-interactive mode\n" +
+            "--csv <path>\tWrite output as CSV to the specified directory\n" +
+            "--student <upn>\tFilter by student UPN\n" +
+            "--help\t\tShow help"
+        );
+
+        return;
+    }
+    if (args[i] == "--student" && (i + 1 < args.Length))
         upnArg = args[i + 1];
     if (args[i] == "--csv" && (i + 1 < args.Length))
         csvArg = args[i + 1];
@@ -24,6 +37,18 @@ services.AddSingleton<IUserService, UserService>();
 services.AddSingleton<IExportService, CsvExportService>();
 
 var tempConfig = new JsonConfigService().GetConfig();
+
+if (string.IsNullOrWhiteSpace(tempConfig.TenantId))
+    throw new InvalidOperationException("TenantId is missing from app_config.json");
+if (string.IsNullOrWhiteSpace(tempConfig.AppId))
+    throw new InvalidOperationException("AppId is missing from app_config.json");
+if (string.IsNullOrWhiteSpace(tempConfig.ClientSecret))
+    throw new InvalidOperationException("ClientId is missing from app_config.json");
+if (string.IsNullOrWhiteSpace(tempConfig.DefaultDomain))
+    throw new InvalidOperationException("DefaultDomain is missing from app_config.json");
+if (string.IsNullOrWhiteSpace(tempConfig.OutputFolder))
+    throw new InvalidOperationException("Automation mode requires app_config.json OutputFolder to be configured or use of --csv to be used");
+
 services.AddSingleton<IGraphService>(new GraphService(
     tempConfig.TenantId,
     tempConfig.AppId,
@@ -66,9 +91,7 @@ if (!string.IsNullOrWhiteSpace(csvArg))
 }
 else if (automate)
 {
-    if (string.IsNullOrWhiteSpace(config.OutputFolder))
-        throw new InvalidOperationException("Automation mode required app_config.json OutputFolder to be configured. Or --csv to be used");
-    path = config.OutputFolder;
+    path = tempConfig.OutputFolder;
 }
 else if (Prompt.GetYesNo("Would you like this as a CSV?"))
 {
