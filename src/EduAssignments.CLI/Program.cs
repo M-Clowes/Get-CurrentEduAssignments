@@ -11,22 +11,23 @@ for (int i = 0; i < args.Length; ++i)
 {
     if (args[i] == "--help")
     {
+        const int spacer = 18;
         Console.WriteLine(
             "EduAssignments.CLI [options]\n\n" +
             "Options:\n" +
-            "--auto\t\tRun in non-interactive mode\n" +
-            "--csv <path>\tWrite output as CSV to the specified directory\n" +
-            "--student <upn>\tFilter by student UPN\n" +
-            "--help\t\tShow help"
+            $"{"--auto", -spacer}" + "Run in non-interactive mode\n" +
+            $"{"--csv <path>", -spacer}" + "Write output as CSV to the specified directory\n" +
+            $"{"--student <upn>", -spacer}" + "Filter by student UPN\n" +
+            $"{"--help", -spacer}" + "Show help"
         );
 
         return;
     }
-    if (args[i] == "--student" && (i + 1 < args.Length))
-        upnArg = args[i + 1];
-    if (args[i] == "--csv" && (i + 1 < args.Length))
-        csvArg = args[i + 1];
-    if ((args[i] == "--auto") && (i + 1 < args.Length))
+    if (args[i] == "--student" && i + 1 < args.Length)
+        upnArg = args[++i];
+    if (args[i] == "--csv" && i + 1 < args.Length)
+        csvArg = args[+i];
+    if (args[i] == "--auto")
         automate = true;
 }
 
@@ -103,7 +104,7 @@ else
     return;
 }
 
-if (!Directory.Exists(path))
+if (!string.IsNullOrEmpty(path) && !Directory.Exists(path))
     Directory.CreateDirectory(path);
 
 var fileName = $"{DateTime.Now:yyyy.MM.dd}-assignments.csv";

@@ -95,6 +95,6 @@ public static class Graphics
             return string.Empty;
         return value.Length <= maxLength
             ? value
-            : value[..(maxLength - 1)] + "...";
+            : value[..(maxLength - 3)] + "...";
     }
 }
